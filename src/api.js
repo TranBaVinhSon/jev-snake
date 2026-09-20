@@ -1,5 +1,9 @@
 import { legalMoves, serializeGame } from "./game.js";
 
+// TypeSafe rejects the CORS preflight from every browser origin, so Jev calls go
+// through this app's own relay. See worker/index.js and api/jev.js.
+const JEV_RELAY_PATH = "/api/jev";
+
 // The current frontier model from each major lab, pinned to the top of the picker.
 // Prices are per token and match the OpenRouter catalog on 2026-09-20; the live
 // catalog overrides them whenever it loads.
@@ -72,6 +76,9 @@ async function errorMessage(response) {
     if (typeof payload.detail === "string") {
       return payload.detail;
     }
+    if (isRecord(payload.detail) && typeof payload.detail.message === "string") {
+      return payload.detail.message;
+    }
   } catch {
     // The status text below remains useful when an API returns a non-JSON error.
   }
@@ -137,7 +144,7 @@ export async function requestJevDecision({ apiKey, game, signal }) {
   let response;
 
   try {
-    response = await fetch("https://api.typesafe.ai/v1/systemone", {
+    response = await fetch(JEV_RELAY_PATH, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -162,8 +169,8 @@ export async function requestJevDecision({ apiKey, game, signal }) {
       throw error;
     }
     throw localizableError(
-      "typesafe-unreachable",
-      "The browser could not reach TypeSafe. Its API may need to allow this site's CORS origin.",
+      "jev-relay-unreachable",
+      "Could not reach the Jev relay. Check your connection and try again.",
     );
   }
 
