@@ -159,3 +159,37 @@ test("the Vercel edge function is the same relay, not a second copy", async () =
   assert.equal(jev.default, relayJev);
   assert.equal(jev.config.runtime, "edge");
 });
+
+test("refuses an oversized /api/jev body before calling TypeSafe", async (t) => {
+  const calls = stubTypeSafe(t, () => new Response("{}", { status: 200 }));
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", {
+      method: "POST",
+      headers: { authorization: "Bearer caller-key" },
+      body: "x".repeat(64 * 1024 + 1),
+    }),
+    assets404,
+  );
+
+  assert.equal(response.status, 413);
+  assert.equal(calls.length, 0);
+});
+
+test("reports a TypeSafe outage as 502 rather than a dead connection", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => {
+    throw new TypeError("network down");
+  });
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", {
+      method: "POST",
+      headers: { authorization: "Bearer caller-key" },
+      body: "{}",
+    }),
+    assets404,
+  );
+
+  assert.equal(response.status, 502);
+  assert.match((await response.json()).detail.message, /could not reach TypeSafe/);
+});
