@@ -66,3 +66,89 @@ test("emits the files required by Sites packaging", async () => {
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
 });
+
+const assets404 = { ASSETS: { fetch: async () => new Response("missing", { status: 404 }) } };
+
+function stubTypeSafe(t, respond) {
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    calls.push({ url, init });
+    return respond();
+  });
+  return calls;
+}
+
+test("relays /api/jev to TypeSafe with the caller's key and no browser Origin", async (t) => {
+  const calls = stubTypeSafe(
+    t,
+    () =>
+      new Response('{"answers":{}}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+  );
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer caller-key",
+        origin: "https://example.test",
+        "content-type": "application/json",
+      },
+      body: '{"model":"jev-latest"}',
+    }),
+    assets404,
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), '{"answers":{}}');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://api.typesafe.ai/v1/systemone");
+  assert.equal(calls[0].init.headers.authorization, "Bearer caller-key");
+  assert.equal(calls[0].init.headers.origin, undefined, "no browser Origin reaches TypeSafe");
+  assert.equal(calls[0].init.body, '{"model":"jev-latest"}');
+});
+
+test("passes a TypeSafe error status and body straight back to the browser", async (t) => {
+  const body = '{"detail":{"error_type":"authentication_error","message":"Cannot authenticate"}}';
+  stubTypeSafe(
+    t,
+    () => new Response(body, { status: 401, headers: { "content-type": "application/json" } }),
+  );
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", {
+      method: "POST",
+      headers: { authorization: "Bearer bad-key" },
+      body: "{}",
+    }),
+    assets404,
+  );
+
+  assert.equal(response.status, 401);
+  assert.equal(await response.text(), body);
+});
+
+test("refuses a /api/jev call that carries no key", async (t) => {
+  const calls = stubTypeSafe(t, () => new Response("{}", { status: 200 }));
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", { method: "POST", body: "{}" }),
+    assets404,
+  );
+
+  assert.equal(response.status, 401);
+  assert.equal(calls.length, 0);
+});
+
+test("refuses a non-POST /api/jev call", async (t) => {
+  stubTypeSafe(t, () => new Response("{}", { status: 200 }));
+
+  const response = await worker.fetch(
+    new Request("https://example.test/api/jev", { headers: { accept: "text/html" } }),
+    assets404,
+  );
+
+  assert.equal(response.status, 405);
+});
