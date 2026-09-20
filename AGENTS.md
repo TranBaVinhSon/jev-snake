@@ -18,5 +18,10 @@ When implementing from a selected generated mock, treat that image as the source
   choice persists in localStorage, and an unset choice falls back to the browser
   language. All UI copy lives in `src/i18n.js`; both dictionaries must stay at parity.
 - The result strip carries no demo/live data badge.
+- Demo mode says so plainly. A persistent, non-dismissible callout sits between
+  the race controls and the arena whenever both keys are missing, states that the
+  scores and latencies are scripted rather than measured, and offers a button
+  that opens Settings. It replaces the old transient "demo mode is running"
+  notice, so the two never say the same thing at once.
 
 Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs`, and `tests/sites-worker.test.mjs` intact so the same local prototype can be handed to Sites. Before a Sites handoff, run `npm run build` and `npm run test:sites`; the build must leave `dist/client/index.html`, `dist/server/index.js`, and `dist/.openai/hosting.json`.

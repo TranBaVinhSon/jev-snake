@@ -37,9 +37,13 @@ const en = Object.freeze({
   "controls.explainerLine2":
     "Each race runs {seconds} seconds. Highest score wins.",
 
+  "demoCallout.badge": "Simulated",
+  "demoCallout.title": "This demo does not measure real models.",
+  "demoCallout.body":
+    "Demo mode drives both snakes from a built-in script, so the scores and latencies below are scripted, not measured. Add a Jev key and an OpenRouter key to race Jev against a real LLM and see the actual comparison.",
+  "demoCallout.action": "Add API keys",
+
   "notice.dismiss": "Dismiss notice",
-  "notice.demoStarted":
-    "Demo mode is running. Add both API keys in Settings for a live race.",
   "notice.liveStarted":
     "Live API race started. Both models received the same board seed.",
   "notice.apiFailed": "The race ended early because an API call failed.",
@@ -146,9 +150,13 @@ const ja = Object.freeze({
   "controls.explainerLine2":
     "1レースは{seconds}秒。スコアが高いほうが勝ちです。",
 
+  "demoCallout.badge": "シミュレーション",
+  "demoCallout.title": "このデモは実際のモデルを計測していません。",
+  "demoCallout.body":
+    "デモモードでは両方のスネークを内蔵スクリプトが動かすため、下のスコアと応答時間は実測値ではありません。Jev と OpenRouter のAPIキーを追加すると、Jev と実際のLLMを対戦させて本当の比較を確認できます。",
+  "demoCallout.action": "APIキーを追加",
+
   "notice.dismiss": "通知を閉じる",
-  "notice.demoStarted":
-    "デモモードで実行中です。ライブレースには設定で両方のAPIキーを追加してください。",
   "notice.liveStarted":
     "ライブAPIレースを開始しました。両方のモデルに同じ盤面シードを渡しています。",
   "notice.apiFailed": "APIリクエストが失敗したため、レースは途中で終了しました。",
