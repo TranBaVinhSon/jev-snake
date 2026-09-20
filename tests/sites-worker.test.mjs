@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { access } from "node:fs/promises";
 import test from "node:test";
-import worker from "../worker/index.js";
+import worker, { relayJev } from "../worker/index.js";
 
 test("serves existing static assets without a fallback", async () => {
   const calls = [];
@@ -151,4 +151,11 @@ test("refuses a non-POST /api/jev call", async (t) => {
   );
 
   assert.equal(response.status, 405);
+});
+
+test("the Vercel edge function is the same relay, not a second copy", async () => {
+  const jev = await import("../api/jev.js");
+
+  assert.equal(jev.default, relayJev);
+  assert.equal(jev.config.runtime, "edge");
 });
