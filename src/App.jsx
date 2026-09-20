@@ -293,6 +293,22 @@ function Scoreboard({ elapsed, jevScore, llmScore, phase, t }) {
   );
 }
 
+function DemoCallout({ onOpenSettings, t }) {
+  return (
+    <section className="demo-callout" role="status">
+      <div className="demo-callout-copy">
+        <span className="mode-badge">{t("demoCallout.badge")}</span>
+        <h2>{t("demoCallout.title")}</h2>
+        <p>{t("demoCallout.body")}</p>
+      </div>
+      <button onClick={onOpenSettings} type="button">
+        <GearSix size={18} weight="bold" />
+        <span>{t("demoCallout.action")}</span>
+      </button>
+    </section>
+  );
+}
+
 function CredentialField({ getKeyHref, id, label, onChange, t, value }) {
   const [visible, setVisible] = useState(false);
 
@@ -665,7 +681,8 @@ export function App() {
     controllerRef.current = controller;
     stopRequestedRef.current = false;
     setErrors({});
-    setNotice(mode === "demo" ? "notice.demoStarted" : "notice.liveStarted");
+    // In demo mode the callout above already says the race is simulated.
+    setNotice(mode === "demo" ? "" : "notice.liveStarted");
     setPhase("running");
     setElapsed(0);
 
@@ -843,6 +860,10 @@ export function App() {
           </p>
         </div>
       </section>
+
+      {bothKeysStored ? null : (
+        <DemoCallout onOpenSettings={() => setSettingsOpen(true)} t={t} />
+      )}
 
       {notice ? (
         <div className="notice-bar" role="status">
