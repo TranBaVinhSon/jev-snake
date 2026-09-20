@@ -9,8 +9,10 @@ many good decisions each model can make per second.
 
 ![SnakeBench racing Jev against Claude Sonnet 5. Jev finishes 18-3 at 151 ms average latency against 974 ms.](docs/screenshot.png)
 
-Everything runs in the browser. There is no application backend, and your API
-keys never leave the machine.
+The game, the scoring, and both agent loops run in the browser. The one piece of
+server code is a relay at `/api/jev`, because TypeSafe rejects the CORS preflight
+from every browser origin. Your keys stay in this browser's `localStorage`; the
+Jev key passes through the relay on each move and is never stored there.
 
 ## How a race works
 
@@ -49,8 +51,12 @@ locally so you can see the layout and the scoring work. The screenshot above is
 a demo race.
 
 For a real race, open **Settings**, paste a Jev key and an OpenRouter key, and
-save. Both keys are stored in this browser's `localStorage`, unencrypted, and
-are sent only to `api.typesafe.ai` and `openrouter.ai`.
+save. Both keys are stored in this browser's `localStorage`, unencrypted. The
+OpenRouter key goes straight to `openrouter.ai`. The Jev key travels through
+this app's own `/api/jev` relay to `api.typesafe.ai`, because TypeSafe rejects
+the CORS preflight from browser origins. `npm run dev` serves that path through
+the Vite proxy in `vite.config.mjs`, so a local race behaves like a deployed
+one.
 
 A live race costs real money — one chat completion per move — though a 40-second
 race is typically fractions of a cent.
@@ -81,7 +87,8 @@ backstops anything a translation is missing.
 | `src/game.js` | Board rules, seeded food placement, and the demo-mode agent |
 | `src/api.js` | TypeSafe and OpenRouter clients, plus the frontier model list |
 | `src/i18n.js` | English and Japanese dictionaries |
-| `worker/index.js` | SPA-fallback worker used by the Sites handoff |
+| `worker/index.js` | `relayJev` plus the SPA-fallback worker used by the Sites handoff |
+| `api/jev.js` | Re-exports `relayJev` as a Vercel edge function |
 | `scripts/prepare-sites-build.mjs` | Packages `dist/` for Sites after the Vite build |
 
 ## Commands
@@ -96,12 +103,18 @@ backstops anything a translation is missing.
 ## Deploying
 
 `vercel.json` builds with `npm run build`, serves `dist/client`, and rewrites
-every path to `index.html`. The same build also emits `dist/server/index.js` and
+every path except `/api/` to `index.html`, leaving the relay to `api/jev.js`.
+The same build also emits `dist/server/index.js` and
 `dist/.openai/hosting.json` so the project can be handed to Sites unchanged —
 run `npm run build && npm run test:sites` before that handoff.
 
-## Known limits
+## The Jev relay
 
-TypeSafe currently rejects requests from arbitrary browser origins, so a live
-Jev race needs this app's origin on their CORS allowlist. Demo mode works
-regardless.
+`api.typesafe.ai` answers the CORS preflight with `400 Disallowed CORS origin`
+for every browser origin, so the page cannot call it directly. Requests go to
+`/api/jev` instead, which forwards them server-side where no preflight applies.
+
+One implementation covers every target. `worker/index.js` exports `relayJev`,
+`api/jev.js` re-exports it as a Vercel edge function, and `vite.config.mjs`
+proxies the same path in development. The relay pins the upstream URL, forwards
+only `authorization` and `content-type`, and holds no key of its own.

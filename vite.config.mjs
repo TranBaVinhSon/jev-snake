@@ -14,6 +14,15 @@ export default defineConfig({
     warmup: {
       clientFiles: ["./src/main.jsx"],
     },
+    // Stands in for api/jev.js so `npm run dev` reaches Jev the same way the
+    // deployed app does. TypeSafe blocks the browser's preflight, not the POST.
+    proxy: {
+      "/api/jev": {
+        target: "https://api.typesafe.ai",
+        changeOrigin: true,
+        rewrite: () => "/v1/systemone",
+      },
+    },
   },
   plugins: [react()],
 });

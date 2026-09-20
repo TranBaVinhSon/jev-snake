@@ -56,8 +56,8 @@ const en = Object.freeze({
   "notice.keysDeleted": "Stored API keys were removed from this browser.",
 
   "error.unknown": "Unknown API error",
-  "error.typesafe-unreachable":
-    "The browser could not reach TypeSafe. Its API may need to allow this site's CORS origin.",
+  "error.jev-relay-unreachable":
+    "Could not reach the Jev relay. Check your connection and try again.",
   "error.model-list-unexpected": "OpenRouter returned an unexpected model list.",
 
   "arena.aria": "Head-to-head Snake race",
@@ -173,8 +173,8 @@ const ja = Object.freeze({
   "notice.keysDeleted": "保存されていたAPIキーをこのブラウザから削除しました。",
 
   "error.unknown": "不明なAPIエラー",
-  "error.typesafe-unreachable":
-    "ブラウザからTypeSafeに接続できませんでした。APIがこのサイトのCORSオリジンを許可する必要があります。",
+  "error.jev-relay-unreachable":
+    "Jevリレーに接続できませんでした。通信環境を確認してからもう一度お試しください。",
   "error.model-list-unexpected":
     "OpenRouter から想定外のモデル一覧が返されました。",
 
